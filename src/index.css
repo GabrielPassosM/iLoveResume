@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ===== Design System Tokens ===== */
+:root {
+  /* Colors */
+  --bg-primary: #f0f2f5;
+  --bg-gradient-start: #e8ecf1;
+  --bg-gradient-end: #f5f7fa;
+
+  --surface-elevated: rgba(255, 255, 255, 0.85);
+  --surface-secondary: rgba(241, 245, 249, 0.8);
+  --surface-hover: rgba(226, 232, 240, 0.6);
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.12);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #93c5fd;
+  --accent-subtle: rgba(37, 99, 235, 0.06);
+
+  /* Typography */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===== Reset & Base ===== */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Selection ===== */
+::selection {
+  background: var(--accent-light);
+  color: var(--text-primary);
+}
+
+/* ===== Utility ===== */
+.no-print {
+  /* Will be hidden during PDF/print export */
+}
+
+/* ===== Focus ===== */
+[contenteditable]:focus {
+  outline: none;
+}
+
+/* ===== Print ===== */
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
