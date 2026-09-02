@@ -4,7 +4,6 @@ import {
   TextRun,
   HeadingLevel,
   BorderStyle,
-  AlignmentType,
   Packer,
   ExternalHyperlink,
 } from 'docx';
@@ -48,6 +47,16 @@ function parseContentToRuns(content) {
   return runs;
 }
 
+function formatUrl(url) {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//i.test(trimmed) || /^mailto:/i.test(trimmed)) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+
 export async function exportDocx(resume) {
   const { header, sections } = resume;
 
@@ -62,6 +71,7 @@ export async function exportDocx(resume) {
           bold: true,
           size: 36,
           font: 'Arial',
+          color: '000000',
         }),
       ],
     })
@@ -75,34 +85,103 @@ export async function exportDocx(resume) {
           text: header.jobTitle,
           size: 22,
           font: 'Arial',
+          color: '333333',
         }),
       ],
     })
   );
 
   // Contact info line
-  const contactParts = [header.location, header.email, header.phone]
-    .filter(Boolean)
-    .join(' | ');
+  const contactRuns = [];
 
-  const contactRuns = [new TextRun({ text: contactParts, size: 20, font: 'Arial' })];
+  const addSeparatorIfNeeded = () => {
+    if (contactRuns.length > 0) {
+      contactRuns.push(new TextRun({ text: ' | ', size: 20, font: 'Arial' }));
+    }
+  };
+
+  if (header.location && header.location.trim()) {
+    contactRuns.push(
+      new TextRun({
+        text: header.location.trim(),
+        size: 20,
+        font: 'Arial',
+      })
+    );
+  }
+
+  if (header.email && header.email.trim()) {
+    addSeparatorIfNeeded();
+    const email = header.email.trim();
+    contactRuns.push(
+      new ExternalHyperlink({
+        children: [
+          new TextRun({
+            text: email,
+            style: 'Hyperlink',
+            size: 20,
+            font: 'Arial',
+            color: '0563C1',
+            underline: {},
+          }),
+        ],
+        link: email.startsWith('mailto:') ? email : `mailto:${email}`,
+      })
+    );
+  }
+
+  if (header.phone && header.phone.trim()) {
+    addSeparatorIfNeeded();
+    contactRuns.push(
+      new TextRun({
+        text: header.phone.trim(),
+        size: 20,
+        font: 'Arial',
+      })
+    );
+  }
 
   if (header.links && header.links.length > 0) {
     header.links.forEach((link) => {
-      contactRuns.push(new TextRun({ text: ' | ', size: 20, font: 'Arial' }));
-      contactRuns.push(
-        new TextRun({
-          text: link.label,
-          size: 20,
-          font: 'Arial',
-          color: '0563C1',
-          underline: {},
-        })
-      );
+      const label = (link.label || '').trim();
+      const rawUrl = (link.url || '').trim();
+      const displayText = label || rawUrl;
+      if (!displayText) return;
+
+      addSeparatorIfNeeded();
+
+      const formattedUrl = formatUrl(rawUrl);
+      if (formattedUrl) {
+        contactRuns.push(
+          new ExternalHyperlink({
+            children: [
+              new TextRun({
+                text: displayText,
+                style: 'Hyperlink',
+                size: 20,
+                font: 'Arial',
+                color: '0563C1',
+                underline: {},
+              }),
+            ],
+            link: formattedUrl,
+          })
+        );
+      } else {
+        contactRuns.push(
+          new TextRun({
+            text: displayText,
+            size: 20,
+            font: 'Arial',
+          })
+        );
+      }
     });
   }
 
-  children.push(new Paragraph({ children: contactRuns }));
+  if (contactRuns.length > 0) {
+    children.push(new Paragraph({ children: contactRuns }));
+  }
 
   // Sections
   sections.forEach((section) => {
@@ -114,6 +193,7 @@ export async function exportDocx(resume) {
             text: section.title,
             size: 28,
             font: 'Arial',
+            color: '000000',
           }),
         ],
         heading: HeadingLevel.HEADING_2,
@@ -140,6 +220,21 @@ export async function exportDocx(resume) {
   });
 
   const doc = new Document({
+    styles: {
+      paragraphStyles: [
+        {
+          id: 'Heading2',
+          name: 'Heading 2',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: {
+            color: '000000',
+            font: 'Arial',
+          },
+        },
+      ],
+    },
     sections: [
       {
         properties: {
@@ -158,6 +253,7 @@ export async function exportDocx(resume) {
   });
 
   const blob = await Packer.toBlob(doc);
-  const fileName = `curriculo_${header.name.replace(/\s+/g, '_').toLowerCase() || 'documento'}.docx`;
+  const safeName = (header.name || '').trim().replace(/\s+/g, '_').toLowerCase() || 'documento';
+  const fileName = `curriculo_${safeName}.docx`;
   saveAs(blob, fileName);
 }

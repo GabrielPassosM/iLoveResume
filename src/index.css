@@ -76,7 +76,7 @@ body {
 
 /* ===== Utility ===== */
 .no-print {
-  /* Will be hidden during PDF/print export */
+  /* Will be hidden during print export */
 }
 
 /* ===== Focus ===== */
