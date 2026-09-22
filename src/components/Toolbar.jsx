@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useResume, useResumeDispatch } from '../hooks/useResumeStore';
+import { useResume, useResumeDispatch, useResumeHistory } from '../hooks/useResumeStore';
 import { exportProject, importProject } from '../utils/exportImport';
 import { exportDocx } from '../utils/exportDocx';
 import './Toolbar.css';
@@ -7,6 +7,7 @@ import './Toolbar.css';
 export default function Toolbar() {
   const resume = useResume();
   const dispatch = useResumeDispatch();
+  const { canUndo, canRedo, undo, redo } = useResumeHistory();
   const fileInputRef = useRef(null);
 
   const handleExportProject = () => {
@@ -42,6 +43,40 @@ export default function Toolbar() {
         <div className="toolbar-logo">
           <span className="toolbar-logo-icon">📄</span>
           <span className="toolbar-logo-text">iLoveResume</span>
+        </div>
+
+        <div className="toolbar-separator" />
+
+        <div className="toolbar-history-group">
+          <button
+            className="toolbar-btn toolbar-btn--secondary"
+            onClick={undo}
+            disabled={!canUndo}
+            id="btn-undo"
+            title="Desfazer (Ctrl+Z / ⌘Z)"
+            aria-label="Desfazer alteração"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+            <span>Desfazer</span>
+          </button>
+
+          <button
+            className="toolbar-btn toolbar-btn--secondary"
+            onClick={redo}
+            disabled={!canRedo}
+            id="btn-redo"
+            title="Refazer (Ctrl+Y / ⌘⇧Z)"
+            aria-label="Refazer alteração"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            <span>Refazer</span>
+          </button>
         </div>
       </div>
 

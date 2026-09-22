@@ -51,6 +51,12 @@
   margin: 0 4px;
 }
 
+.toolbar-history-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .toolbar-btn {
   display: inline-flex;
   align-items: center;
@@ -64,6 +70,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .toolbar-btn--secondary {

@@ -1,8 +1,16 @@
-import { createContext, useContext, useReducer, useCallback } from 'react';
+import { createContext, useContext, useReducer, useCallback, useMemo, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 const ResumeContext = createContext(null);
 const ResumeDispatchContext = createContext(null);
+const ResumeHistoryContext = createContext({
+  canUndo: false,
+  canRedo: false,
+  undo: () => {},
+  redo: () => {},
+});
+
+const MAX_HISTORY = 50;
 
 export const DEFAULT_RESUME = {
   header: {
@@ -37,6 +45,7 @@ export const DEFAULT_RESUME = {
 function resumeReducer(state, action) {
   switch (action.type) {
     case 'SET_HEADER_FIELD':
+      if (state.header[action.field] === action.value) return state;
       return {
         ...state,
         header: {
@@ -57,7 +66,9 @@ function resumeReducer(state, action) {
         },
       };
 
-    case 'UPDATE_LINK':
+    case 'UPDATE_LINK': {
+      const targetLink = state.header.links.find((link) => link.id === action.id);
+      if (targetLink && targetLink[action.field] === action.value) return state;
       return {
         ...state,
         header: {
@@ -67,6 +78,7 @@ function resumeReducer(state, action) {
           ),
         },
       };
+    }
 
     case 'REMOVE_LINK':
       return {
@@ -90,7 +102,9 @@ function resumeReducer(state, action) {
         ],
       };
 
-    case 'UPDATE_SECTION':
+    case 'UPDATE_SECTION': {
+      const targetSection = state.sections.find((section) => section.id === action.id);
+      if (targetSection && targetSection[action.field] === action.value) return state;
       return {
         ...state,
         sections: state.sections.map((section) =>
@@ -99,6 +113,7 @@ function resumeReducer(state, action) {
             : section
         ),
       };
+    }
 
     case 'REMOVE_SECTION':
       return {
@@ -108,6 +123,7 @@ function resumeReducer(state, action) {
 
     case 'REORDER_SECTIONS': {
       const { fromIndex, toIndex } = action;
+      if (fromIndex === toIndex) return state;
       const newSections = [...state.sections];
       const [moved] = newSections.splice(fromIndex, 1);
       newSections.splice(toIndex, 0, moved);
@@ -115,6 +131,7 @@ function resumeReducer(state, action) {
     }
 
     case 'LOAD_RESUME':
+      if (JSON.stringify(state) === JSON.stringify(action.resume)) return state;
       return action.resume;
 
     default:
@@ -122,16 +139,117 @@ function resumeReducer(state, action) {
   }
 }
 
+function historyReducer(state, action) {
+  const { past, present, future } = state;
+
+  switch (action.type) {
+    case 'UNDO': {
+      if (past.length === 0) return state;
+      const previous = past[past.length - 1];
+      const newPast = past.slice(0, past.length - 1);
+      return {
+        past: newPast,
+        present: previous,
+        future: [present, ...future],
+      };
+    }
+
+    case 'REDO': {
+      if (future.length === 0) return state;
+      const next = future[0];
+      const newFuture = future.slice(1);
+      return {
+        past: [...past, present],
+        present: next,
+        future: newFuture,
+      };
+    }
+
+    default: {
+      const newPresent = resumeReducer(present, action);
+      if (newPresent === present) {
+        return state;
+      }
+      return {
+        past: [...past.slice(-(MAX_HISTORY - 1)), present],
+        present: newPresent,
+        future: [],
+      };
+    }
+  }
+}
+
 export function ResumeProvider({ children, initialData }) {
-  const [resume, dispatch] = useReducer(
-    resumeReducer,
-    initialData || DEFAULT_RESUME
+  const [historyState, dispatch] = useReducer(
+    historyReducer,
+    {
+      past: [],
+      present: initialData || DEFAULT_RESUME,
+      future: [],
+    }
   );
 
+  const canUndo = historyState.past.length > 0;
+  const canRedo = historyState.future.length > 0;
+
+  const undo = useCallback(() => {
+    dispatch({ type: 'UNDO' });
+  }, []);
+
+  const redo = useCallback(() => {
+    dispatch({ type: 'REDO' });
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+      const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      if (!isCmdOrCtrl) return;
+
+      const key = e.key.toLowerCase();
+      const isUndo = key === 'z' && !e.shiftKey;
+      const isRedo = (key === 'z' && e.shiftKey) || key === 'y';
+
+      if (!isUndo && !isRedo) return;
+
+      const activeEl = document.activeElement;
+      const tag = activeEl?.tagName?.toLowerCase();
+      const isFormInput = tag === 'input' || tag === 'textarea';
+
+      if (isFormInput) {
+        return;
+      }
+
+      if (activeEl?.isContentEditable) {
+        activeEl.blur();
+      }
+
+      e.preventDefault();
+      if (isUndo) {
+        undo();
+      } else if (isRedo) {
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
+  const historyValue = useMemo(() => ({
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+  }), [canUndo, canRedo, undo, redo]);
+
   return (
-    <ResumeContext.Provider value={resume}>
+    <ResumeContext.Provider value={historyState.present}>
       <ResumeDispatchContext.Provider value={dispatch}>
-        {children}
+        <ResumeHistoryContext.Provider value={historyValue}>
+          {children}
+        </ResumeHistoryContext.Provider>
       </ResumeDispatchContext.Provider>
     </ResumeContext.Provider>
   );
@@ -144,3 +262,8 @@ export function useResume() {
 export function useResumeDispatch() {
   return useContext(ResumeDispatchContext);
 }
+
+export function useResumeHistory() {
+  return useContext(ResumeHistoryContext);
+}
+
