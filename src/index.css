@@ -79,9 +79,19 @@ body {
   /* Will be hidden during print export */
 }
 
-/* ===== Focus ===== */
+/* ===== Focus & Placeholders ===== */
 [contenteditable]:focus {
   outline: none;
+}
+
+[contenteditable]:empty::before,
+[contenteditable]:has(> br:only-child)::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  opacity: 0.6;
+  pointer-events: none;
+  font-style: normal;
+  display: inline-block;
 }
 
 /* ===== Print ===== */
@@ -92,5 +102,10 @@ body {
 
   .no-print {
     display: none !important;
+  }
+
+  [contenteditable]:empty::before,
+  [contenteditable]:has(> br:only-child)::before {
+    content: none !important;
   }
 }

@@ -1,5 +1,6 @@
 import { useResume } from '../hooks/useResumeStore';
 import { useAutoSave } from '../hooks/useAutoSave';
+import { usePlainTextPaste } from '../hooks/usePlainTextPaste';
 import HeaderEditor from './HeaderEditor';
 import SectionEditor from './SectionEditor';
 import AddSectionButton from './AddSectionButton';
@@ -11,6 +12,9 @@ export default function ResumeEditor() {
 
   // Auto-save to localStorage
   useAutoSave(resume);
+
+  // Global plain-text paste and drop handling for all editable fields
+  usePlainTextPaste();
 
   return (
     <main className="editor-container" id="editor-container">

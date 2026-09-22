@@ -51,7 +51,8 @@
   margin: 0 4px;
 }
 
-.toolbar-history-group {
+.toolbar-history-group,
+.toolbar-format-group {
   display: flex;
   align-items: center;
   gap: 6px;

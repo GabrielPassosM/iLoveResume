@@ -78,6 +78,27 @@ export default function Toolbar() {
             <span>Refazer</span>
           </button>
         </div>
+
+        <div className="toolbar-separator" />
+
+        <div className="toolbar-format-group">
+          <button
+            className="toolbar-btn toolbar-btn--secondary"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              document.execCommand('bold', false, null);
+            }}
+            id="btn-bold"
+            title="Negrito (Ctrl+B / ⌘B)"
+            aria-label="Formatar em negrito"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+              <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+            </svg>
+            <span>Negrito</span>
+          </button>
+        </div>
       </div>
 
       <div className="toolbar-right">

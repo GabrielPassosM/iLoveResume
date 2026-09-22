@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useResumeDispatch } from '../hooks/useResumeStore';
+import { htmlToCleanContent } from '../utils/formatSerializer';
 import './SectionEditor.css';
 
 export default function SectionEditor({ section, index, totalSections }) {
@@ -20,7 +21,7 @@ export default function SectionEditor({ section, index, totalSections }) {
       type: 'UPDATE_SECTION',
       id: section.id,
       field: 'content',
-      value: e.currentTarget.innerText,
+      value: htmlToCleanContent(e.currentTarget),
     });
   };
 
@@ -47,6 +48,13 @@ export default function SectionEditor({ section, index, totalSections }) {
         fromIndex: index,
         toIndex: index + 1,
       });
+    }
+  };
+
+  const handleTitleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.currentTarget.blur();
     }
   };
 
@@ -94,6 +102,8 @@ export default function SectionEditor({ section, index, totalSections }) {
         className="section-title"
         contentEditable
         suppressContentEditableWarning
+        data-placeholder="TÍTULO DA SEÇÃO"
+        onKeyDown={handleTitleKeyDown}
         onBlur={handleTitleChange}
       >
         {section.title}
@@ -108,6 +118,8 @@ export default function SectionEditor({ section, index, totalSections }) {
         className="section-content"
         contentEditable
         suppressContentEditableWarning
+        data-multiline="true"
+        data-placeholder="Escreva aqui o conteúdo da seção..."
         onBlur={handleContentChange}
         dangerouslySetInnerHTML={{ __html: section.content.replace(/\n/g, '<br/>') }}
       />

@@ -22,6 +22,13 @@ export default function HeaderEditor() {
     dispatch({ type: 'REMOVE_LINK', id });
   };
 
+  const handleSingleLineKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <div className="header-editor" id="header-editor">
       {/* Name */}
@@ -29,6 +36,8 @@ export default function HeaderEditor() {
         className="header-name"
         contentEditable
         suppressContentEditableWarning
+        data-placeholder="SEU NOME"
+        onKeyDown={handleSingleLineKeyDown}
         onBlur={(e) => handleChange('name', e.currentTarget.textContent)}
         id="header-name"
       >
@@ -40,6 +49,8 @@ export default function HeaderEditor() {
         className="header-jobtitle"
         contentEditable
         suppressContentEditableWarning
+        data-placeholder="Seu Cargo"
+        onKeyDown={handleSingleLineKeyDown}
         onBlur={(e) => handleChange('jobTitle', e.currentTarget.textContent)}
         id="header-jobtitle"
       >
@@ -52,6 +63,8 @@ export default function HeaderEditor() {
           className="header-contact-item"
           contentEditable
           suppressContentEditableWarning
+          data-placeholder="Cidade, Estado"
+          onKeyDown={handleSingleLineKeyDown}
           onBlur={(e) => handleChange('location', e.currentTarget.textContent)}
           id="header-location"
         >
@@ -62,6 +75,8 @@ export default function HeaderEditor() {
           className="header-contact-item header-contact-email"
           contentEditable
           suppressContentEditableWarning
+          data-placeholder="email@exemplo.com"
+          onKeyDown={handleSingleLineKeyDown}
           onBlur={(e) => handleChange('email', e.currentTarget.textContent)}
           id="header-email"
         >
@@ -72,6 +87,8 @@ export default function HeaderEditor() {
           className="header-contact-item"
           contentEditable
           suppressContentEditableWarning
+          data-placeholder="(00) 00000-0000"
+          onKeyDown={handleSingleLineKeyDown}
           onBlur={(e) => handleChange('phone', e.currentTarget.textContent)}
           id="header-phone"
         >
@@ -85,6 +102,8 @@ export default function HeaderEditor() {
               className="header-contact-item header-contact-link"
               contentEditable
               suppressContentEditableWarning
+              data-placeholder="Link"
+              onKeyDown={handleSingleLineKeyDown}
               onBlur={(e) =>
                 handleUpdateLink(link.id, 'label', e.currentTarget.textContent)
               }
